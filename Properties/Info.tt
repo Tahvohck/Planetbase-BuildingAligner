@@ -1,0 +1,11 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ include file="version.t4" #>
+<#@ output extension=".json" #>
+{
+    "ID":           "JPFarias-BuildingAligner",
+    "Author":       "Tahvohck",
+    "Version":      "<#= this.version #>.<#= this.buildID #>",
+
+    "EntryPoint":   "Tahvohck_Mods.JPFariasUpdates.BuildingAligner.Init",
+    "DisplayName":  "More Storage in Food Machines"
+}
