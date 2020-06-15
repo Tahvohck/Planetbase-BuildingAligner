@@ -152,7 +152,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
                             GroupName,
                             tmpStart, tmpEnd,
                             (flipflop) ? Color.blue : Color.green,
-                            0.25f);
+                            0.125f);
                     }
                     flipflop = !flipflop;
                 }
