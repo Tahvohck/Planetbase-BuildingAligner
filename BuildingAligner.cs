@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using Planetbase;
+using HarmonyLib;
 
 namespace Tahvohck_Mods.JPFariasUpdates
 {
@@ -20,6 +21,8 @@ namespace Tahvohck_Mods.JPFariasUpdates
         public static float MinDistToCheck = 12f;
         public static float MaxDistToCheck = 31f;
 
+        private static Harmony _Harmony;
+
         internal static Module ActiveModule;
         internal static int ActiveModuleSize = 0;
 
@@ -27,6 +30,12 @@ namespace Tahvohck_Mods.JPFariasUpdates
         public static void Init(ModData data)
         {
             data.OnUpdate = Update;
+            _Harmony = new Harmony(typeof(BuildingAligner).FullName);
+            try {
+                _Harmony.PatchAll();
+            } catch (HarmonyException e) {
+                data.Logger.Error(e.Message);
+            }
         }
 
         public static void Update(ModData data, float tDelta)
@@ -35,9 +44,6 @@ namespace Tahvohck_Mods.JPFariasUpdates
             if (!(gameState is null) && gameState.CurrentState() != GameStateHelper.Mode.PlacingModule) {
                 Rendering = false;
                 DebugRenderer.ClearGroup(GroupName);
-            } else if (!(gameState is null) &&
-                gameState.CurrentState() == GameStateHelper.Mode.PlacingModule) {
-                PatchTryPlaceModule.Postfix();
             }
         }
 
@@ -157,6 +163,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
     }
 
 
+    [HarmonyPatch(typeof(GameStateGame), "tryPlaceModule")]
     public class PatchTryPlaceModule
     {
         public static void Postfix()
