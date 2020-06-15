@@ -37,7 +37,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
                 DebugRenderer.ClearGroup(GroupName);
             } else if (!(gameState is null) &&
                 gameState.CurrentState() == GameStateHelper.Mode.PlacingModule) {
-                PatchTryPlace.Postfix();
+                PatchTryPlaceModule.Postfix();
             }
         }
 
@@ -157,7 +157,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
     }
 
 
-    public class PatchTryPlace
+    public class PatchTryPlaceModule
     {
         public static void Postfix()
         {
