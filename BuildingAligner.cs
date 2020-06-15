@@ -167,8 +167,8 @@ namespace Tahvohck_Mods.JPFariasUpdates
 
             if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) {
                 var game = GameManager.getInstance().getGameState() as GameStateGame;
-                BuildingAligner.ActiveModule = GameStateHelper.GetActiveModule(game);
-                BuildingAligner.ActiveModuleSize = GameStateHelper.GetActiveModuleSizeIndex(game);
+                BuildingAligner.ActiveModule = game.GetActiveModule();
+                BuildingAligner.ActiveModuleSize = game.GetActiveModuleSizeIndex();
 
                 raycastHit.point = BuildingAligner.RenderAvailablePositions(raycastHit.point);
                 //TryAlign(ref raycastHit);
