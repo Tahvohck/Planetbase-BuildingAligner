@@ -6,6 +6,6 @@
     "Author":       "Tahvohck",
     "Version":      "<#= this.version #>.<#= this.buildID #>",
 
-    "EntryPoint":   "Tahvohck_Mods.JPFariasUpdates.BuildingAligner.Init",
-    "DisplayName":  "More Storage in Food Machines"
+    "EntryMethod":   "Tahvohck_Mods.JPFariasUpdates.BuildingAligner.Init",
+    "DisplayName":  "Build Snapper"
 }
