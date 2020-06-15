@@ -16,7 +16,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
         public static bool Rendering = false;
         public static readonly string GroupName = "Connections";
         public static int LayerMask = 256;
-        public static int NumRotationalSegments = 24;
+        public static int NumRotationalSegments = 16;
         public static int NumSteps = 12;
         public static int NumSigDots = 3;   // Should evenly divide NumSteps. Will effectively round up else.
         public static float MinDistToCheck = 12f;
