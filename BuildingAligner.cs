@@ -61,6 +61,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
         {
             float closestDistance = float.MaxValue;
             float floorHeight = TerrainGenerator.getInstance().getFloorHeight();
+            float hoverHeight = 0.5f;
             Vector3 closestPosition = location;
             int sigSplit = NumSteps / NumSigDots;
             bool useCachedData = Vector3.Distance(location, LastInputPoint) < 0.1f;
@@ -118,7 +119,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
                         if (canLink && canPlace) {
                             renderedAnyDot = true;
                             var tmpPoint = pointOnFloor;
-                            tmpPoint.y += 2f;
+                            tmpPoint.y += hoverHeight;
 
                             // Dots are red and large if significant, else blue and small.
                             DebugRenderer.AddCube(
@@ -140,8 +141,8 @@ namespace Tahvohck_Mods.JPFariasUpdates
                     if (renderedAnyDot) {
                         var tmpStart = startPoint;
                         var tmpEnd = endPoint;
-                        tmpStart.y += 2f;
-                        tmpEnd.y += 2f;
+                        tmpStart.y += hoverHeight;
+                        tmpEnd.y += hoverHeight;
 
                         // Alternate colors, draw the line.
                         DebugRenderer.AddLine(
