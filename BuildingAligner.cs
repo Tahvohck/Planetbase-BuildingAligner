@@ -83,7 +83,10 @@ namespace Tahvohck_Mods.JPFariasUpdates
             }
 
             foreach (Module module in nearModules) {
+                bool flipflop = true;
                 List<PositionsLine> lines;
+
+                // Attempt to use cached data.
                 if (useCachedData && ModuleLineCache.ContainsKey(module)) {
                     lines = ModuleLineCache[module];
                 } else {
@@ -92,7 +95,6 @@ namespace Tahvohck_Mods.JPFariasUpdates
                         ModuleLineCache.Add(module, lines);
                     }
                 }
-                bool flipflop = true;
 
                 foreach (var line in lines) {
                     var startPoint = line.First();
