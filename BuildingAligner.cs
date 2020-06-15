@@ -24,13 +24,13 @@ namespace Tahvohck_Mods.JPFariasUpdates
 
         private static Harmony _Harmony;
         private static List<Module> LastListModules;
-        private static Vector3 LastInputPoint = Vector3.zero;
         private static Vector3 LastSnapPoint = Vector3.zero;
         private static Dictionary<Module, List<PositionsLine>> ModuleLineCache =
             new Dictionary<Module, List<PositionsLine>>();
 
         internal static Module ActiveModule;
         internal static int ActiveModuleSize = 0;
+        internal static Vector3 LastInputPoint = Vector3.zero;
 
         [LoaderOptimization(LoaderOptimization.NotSpecified)]
         public static void Init(ModData data)
@@ -215,6 +215,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
             // Only run this if we just released a key and the other alt isn't also down
             if ((Input.GetKeyUp(KeyCode.LeftAlt) || Input.GetKeyUp(KeyCode.RightAlt)) && !altIsDown) {
                 BuildingAligner.Rendering = false;
+                BuildingAligner.LastInputPoint = Vector3.zero;
                 DebugRenderer.ClearGroup(BuildingAligner.GroupName);
             }
         }
