@@ -25,6 +25,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
         private static Harmony _Harmony;
         private static List<Module> LastListModules;
         private static Vector3 LastInputPoint = Vector3.zero;
+        private static Vector3 LastSnapPoint = Vector3.zero;
         private static Dictionary<Module, List<PositionsLine>> ModuleLineCache =
             new Dictionary<Module, List<PositionsLine>>();
 
@@ -67,10 +68,10 @@ namespace Tahvohck_Mods.JPFariasUpdates
             bool useCachedData = Vector3.Distance(location, LastInputPoint) < 0.1f;
 
             List<Module> nearModules;
-            // If we want to use cached data, we can skip most of the intensive filtering.
+            // If we want to use cached data, we can skip most of this function.
             // Otherwise, update the cache.
             if (useCachedData) {
-                nearModules = LastListModules;
+                return LastSnapPoint;
             } else {
                 nearModules = ModuleHelper.GetAllModules(module =>
                 {
@@ -81,20 +82,22 @@ namespace Tahvohck_Mods.JPFariasUpdates
                 });
                 LastListModules = nearModules;
                 LastInputPoint = location;
+                // Only clear the group if we're not using cache
+                DebugRenderer.ClearGroup(GroupName);
             }
 
             foreach (Module module in nearModules) {
                 bool flipflop = true;
                 List<PositionsLine> lines;
 
-                // Attempt to use cached data.
-                if (useCachedData && ModuleLineCache.ContainsKey(module)) {
+                // Attempt to use cached data. We don't need to use the cached flag here
+                // because if cache is set, we skip this block entirely. This is only a check
+                // to see if the module has data in the dict already.
+                if (ModuleLineCache.ContainsKey(module)) {
                     lines = ModuleLineCache[module];
                 } else {
                     lines = GetPositionsAroundModule(module);
-                    if (!ModuleLineCache.ContainsKey(module)) {
-                        ModuleLineCache.Add(module, lines);
-                    }
+                    ModuleLineCache.Add(module, lines);
                 }
 
                 foreach (var line in lines) {
@@ -156,6 +159,7 @@ namespace Tahvohck_Mods.JPFariasUpdates
             }
 
             Rendering = true;
+            LastSnapPoint = closestPosition;
             return closestPosition;
         }
 
@@ -194,11 +198,11 @@ namespace Tahvohck_Mods.JPFariasUpdates
     {
         public static void Postfix()
         {
-            DebugRenderer.ClearGroup("Connections");
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             Physics.Raycast(ray, out RaycastHit raycastHit, 150f, BuildingAligner.LayerMask);
+            bool altIsDown = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
 
-            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) {
+            if (altIsDown) {
                 var game = GameManager.getInstance().getGameState() as GameStateGame;
                 BuildingAligner.ActiveModule = game.GetActiveModule();
                 BuildingAligner.ActiveModuleSize = game.GetActiveModuleSizeIndex();
@@ -206,7 +210,10 @@ namespace Tahvohck_Mods.JPFariasUpdates
                 var newLocation = BuildingAligner.RenderAvailablePositions(raycastHit.point);
                 BuildingAligner.ActiveModule.setPosition(newLocation);
                 //TryAlign(ref raycastHit);
-            } else {
+            }
+
+            // Only run this if we just released a key and the other alt isn't also down
+            if ((Input.GetKeyUp(KeyCode.LeftAlt) || Input.GetKeyUp(KeyCode.RightAlt)) && !altIsDown) {
                 BuildingAligner.Rendering = false;
                 DebugRenderer.ClearGroup(BuildingAligner.GroupName);
             }
