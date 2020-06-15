@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,10 @@ namespace Tahvohck_Mods.JPFariasUpdates
         public static float MaxDistToCheck = 31f;
 
         private static Harmony _Harmony;
+        private static List<Module> LastListModules;
+        private static Vector3 LastInputPoint = Vector3.zero;
+        private static Dictionary<Module, List<PositionsLine>> ModuleLineCache =
+            new Dictionary<Module, List<PositionsLine>>();
 
         internal static Module ActiveModule;
         internal static int ActiveModuleSize = 0;
@@ -58,17 +63,35 @@ namespace Tahvohck_Mods.JPFariasUpdates
             float floorHeight = TerrainGenerator.getInstance().getFloorHeight();
             Vector3 closestPosition = location;
             int sigSplit = NumSteps / NumSigDots;
+            bool useCachedData = Vector3.Distance(location, LastInputPoint) < 0.1f;
 
-
-            List<Module> nearModules = ModuleHelper.GetAllModules(module => {
-                float dist = Vector3.Distance(module.getPosition(), location);
-                bool inRange = dist < MaxDistToCheck * 2;
-                bool isNotActiveModule = module != ActiveModule;
-                return inRange && isNotActiveModule;
-            });
+            List<Module> nearModules;
+            // If we want to use cached data, we can skip most of the intensive filtering.
+            // Otherwise, update the cache.
+            if (useCachedData) {
+                nearModules = LastListModules;
+            } else {
+                nearModules = ModuleHelper.GetAllModules(module =>
+                {
+                    float dist = Vector3.Distance(module.getPosition(), location);
+                    bool inRange = dist < MaxDistToCheck * 2;
+                    bool isNotActiveModule = module != ActiveModule;
+                    return inRange && isNotActiveModule;
+                });
+                LastListModules = nearModules;
+                LastInputPoint = location;
+            }
 
             foreach (Module module in nearModules) {
-                var lines = GetPositionsAroundModule(module);
+                List<PositionsLine> lines;
+                if (useCachedData && ModuleLineCache.ContainsKey(module)) {
+                    lines = ModuleLineCache[module];
+                } else {
+                    lines = GetPositionsAroundModule(module);
+                    if (!ModuleLineCache.ContainsKey(module)) {
+                        ModuleLineCache.Add(module, lines);
+                    }
+                }
                 bool flipflop = true;
 
                 foreach (var line in lines) {
@@ -136,9 +159,9 @@ namespace Tahvohck_Mods.JPFariasUpdates
         /// <summary>
         /// Returns a list of lines, which are lists of positions, centered on a module
         /// </summary>
-        public static List<List<Vector3>> GetPositionsAroundModule(Module m)
+        public static List<PositionsLine> GetPositionsAroundModule(Module m)
         {
-            List<List<Vector3>> lines = new List<List<Vector3>>();
+            List<PositionsLine> lines = new List<PositionsLine>();
 
             float rotationDegrees = 360f / NumRotationalSegments;
             float stepSize = (MaxDistToCheck - MinDistToCheck) / (NumSteps - 1);
@@ -150,11 +173,11 @@ namespace Tahvohck_Mods.JPFariasUpdates
             for (int rotIDX = 0; rotIDX < NumRotationalSegments; rotIDX++) {
                 // for each step on that rotation
                 List<Vector3> positions = new List<Vector3>();
-                lines.Add(positions);
                 for (int stepIDX = 0; stepIDX < NumSteps; stepIDX++) {
                     // add a new position at that step
                     positions.Add(center + direction * (MinDistToCheck + stepSize * stepIDX));
                 }
+                lines.Add(new PositionsLine(positions));
                 direction = rotation * direction;
             }
 
@@ -177,12 +200,58 @@ namespace Tahvohck_Mods.JPFariasUpdates
                 BuildingAligner.ActiveModule = game.GetActiveModule();
                 BuildingAligner.ActiveModuleSize = game.GetActiveModuleSizeIndex();
 
-                raycastHit.point = BuildingAligner.RenderAvailablePositions(raycastHit.point);
+                var newLocation = BuildingAligner.RenderAvailablePositions(raycastHit.point);
+                BuildingAligner.ActiveModule.setPosition(newLocation);
                 //TryAlign(ref raycastHit);
             } else {
                 BuildingAligner.Rendering = false;
                 DebugRenderer.ClearGroup(BuildingAligner.GroupName);
             }
+        }
+    }
+
+    public class PositionsLine : IEnumerable<Vector3>
+    {
+        public Vector3 StartPoint;
+        public Vector3 EndPoint;
+        public List<Vector3> AllPoints;
+
+        /// <summary>
+        /// Create Line from existing list of vectors.
+        /// </summary>
+        /// <param name="points"></param>
+        public PositionsLine(List<Vector3> points)
+        {
+            StartPoint = points.First();
+            EndPoint = points.Last();
+            AllPoints = points;
+        }
+
+        /// <summary>
+        /// Create Line from a starting point.
+        /// </summary>
+        /// <param name="startPoint"></param>
+        public PositionsLine(Vector3 startPoint) : this(new List<Vector3>() { startPoint }) { }
+
+        public void Add(Vector3 point)
+        {
+            EndPoint = point;
+            AllPoints.Add(point);
+        }
+
+        public int IndexOf(Vector3 point)
+        {
+            return AllPoints.IndexOf(point);
+        }
+
+        public IEnumerator<Vector3> GetEnumerator()
+        {
+            return ((IEnumerable<Vector3>)AllPoints).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable<Vector3>)AllPoints).GetEnumerator();
         }
     }
 }
